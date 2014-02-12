@@ -41,6 +41,7 @@
 
 #include "precompiled.h"
 
+#include <iostream>
 /*######
 ## npc_shenthul
 ######*/
@@ -92,7 +93,8 @@ struct MANGOS_DLL_DECL npc_shenthulAI : public ScriptedAI
                 {
                     if (pPlayer->GetTypeId() == TYPEID_PLAYER && pPlayer->GetQuestStatus(QUEST_SHATTERED_SALUTE) == QUEST_STATUS_INCOMPLETE)
                     {
-                        pPlayer->FailQuest(QUEST_SHATTERED_SALUTE);
+                        std::cout<<"aaaaaaa"<<std::endl;
+						pPlayer->FailQuest(QUEST_SHATTERED_SALUTE);
                     }
                 }
 

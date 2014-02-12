@@ -2141,7 +2141,10 @@ void Creature::ResetRespawnCoord()
 
 void Creature::AllLootRemovedFromCorpse()
 {
-    if (lootForBody && !HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE))
+
+   bool b1 =  !HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+	
+	if (lootForBody && !HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE))
     {
         uint32 corpseLootedDelay;
 

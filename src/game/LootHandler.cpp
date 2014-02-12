@@ -464,11 +464,20 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
             /* Get creature pointer */
             Creature* pCreature = GetPlayer()->GetMap()->GetCreature(lguid);
 
+			   bool b1=pCreature;
+                        bool b2=pCreature->IsAlive();
+                        bool b3=(player->getClass() == CLASS_ROGUE);
+                        bool b4=pCreature->lootForPickPocketed;
+
+
+
             bool ok_loot = (pCreature && // The creature exists (we dont have a null pointer)
                             pCreature->IsAlive() == // Creature is alive and we're a rogue and creature can be pickpocketed
                             (player->getClass() == CLASS_ROGUE && pCreature->lootForPickPocketed));
             if (!ok_loot || !pCreature->IsWithinDistInMap(_player, INTERACTION_DISTANCE))
-                { return; }
+                { 
+                    return; 
+                }
 
             /* Copy creature loot to loot variable */
             loot = &pCreature->loot;
@@ -487,6 +496,8 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
             {
                 /* Update creature */
                 pCreature->AllLootRemovedFromCorpse();
+				loot->clear();
+
             }
             break;
         }

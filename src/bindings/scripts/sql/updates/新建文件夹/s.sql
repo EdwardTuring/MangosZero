@@ -1,0 +1,21 @@
+DELETE FROM scripted_areatrigger WHERE entry=4752;
+UPDATE creature_template SET ScriptName='spell_dummy_npc' WHERE entry=13016;
+UPDATE gameobject_template SET ScriptName='go_father_flame' WHERE entry=175245;
+UPDATE creature_template SET ScriptName='' WHERE entry=15302;
+UPDATE creature_template SET ScriptName='' WHERE entry=15260;
+UPDATE gameobject_template SET ScriptName='go_black_dragon_egg' WHERE entry=177807;
+UPDATE creature_template SET ScriptName='' WHERE entry=14822;
+UPDATE creature_template SET ScriptName='' WHERE entry IN (384,1261,1460,2357,3362,3685,4730,4731,4885,7952,7955);
+UPDATE creature_template SET ScriptName='npc_snufflenose_gopher' WHERE entry=4781;
+UPDATE creature_template SET ScriptName='npc_therylune' WHERE entry=3584;
+UPDATE gameobject_template SET ScriptName='go_sapphiron_birth' WHERE entry=181356;
+UPDATE creature_template SET ScriptName='boss_zumrah' WHERE entry=7271;
+DELETE FROM scripted_event_id WHERE id IN (2609);
+INSERT INTO scripted_event_id VALUES
+(2609,'event_spell_unlocking');
+UPDATE creature_template SET ScriptName='' WHERE entry=7604;
+UPDATE creature_template SET ScriptName='' WHERE entry=7607;
+UPDATE creature_template SET ScriptName='npc_rabid_bear' WHERE entry=2164;
+UPDATE creature_template SET ScriptName='npc_kernobee' WHERE entry=7850;
+UPDATE creature_template SET ScriptName='npc_kinelory' WHERE entry=2713;
+UPDATE creature_template SET ScriptName='npc_stinky_ignatz' WHERE entry=4880;

@@ -1,4 +1,3 @@
-ALTER TABLE db_version CHANGE COLUMN required_z2408_s2034_12522_01_mangos_db_script_string required_r2420_01_mangos_spell_linked bit;
 
 DROP TABLE IF EXISTS `spell_linked`;
 CREATE TABLE IF NOT EXISTS `spell_linked` (
