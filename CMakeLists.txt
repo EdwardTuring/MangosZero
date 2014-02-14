@@ -342,6 +342,7 @@ elseif(WIN32)
         endif()
 
         set(PLATFORM_LINKFLAGS_DEBUG "/NODEFAULTLIB:libcmt.lib /NODEFAULTLIB:libc.lib")
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG  "/DEBUG")
 
     elseif(CMAKE_COMPILER_IS_GNUCC)
     # keep GCC specific stuff here
