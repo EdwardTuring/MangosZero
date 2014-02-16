@@ -243,7 +243,7 @@ void Object::BuildMovementUpdate(ByteBuffer* data, uint8 updateFlags) const
 
     if (updateFlags & UPDATEFLAG_LIVING)
     {
-        if (m_objectTypeId == TYPEID_PLAYER && ((Player*)this)->GetTransport())
+        if ((m_objectTypeId == TYPEID_PLAYER || m_objectTypeId == TYPEID_UNIT ) && ((Unit *)this)->GetTransport())
         {
             moveFlags |= MOVEFLAG_TAXI;
         }
@@ -254,18 +254,18 @@ void Object::BuildMovementUpdate(ByteBuffer* data, uint8 updateFlags) const
 
     if (updateFlags & UPDATEFLAG_HAS_POSITION)              // 0x40
     {
-        if (m_objectTypeId == TYPEID_PLAYER && ((Player*)this)->GetTransport())
+        if ( (m_objectTypeId == TYPEID_PLAYER || m_objectTypeId == TYPEID_UNIT ) && ((Unit*)this)->GetTransport())
         {
-            *data << float(((Player*)this)->GetTransport()->GetPositionX());
-            *data << float(((Player*)this)->GetTransport()->GetPositionY());
-            *data << float(((Player*)this)->GetTransport()->GetPositionZ());
-            *data << float(((Player*)this)->GetTransport()->GetOrientation());
+            *data << float(((Unit*)this)->GetTransport()->GetPositionX());
+            *data << float(((Unit*)this)->GetTransport()->GetPositionY());
+            *data << float(((Unit*)this)->GetTransport()->GetPositionZ());
+            *data << float(((Unit*)this)->GetTransport()->GetOrientation());
 
-            *data << ObjectGuid(((Player*)this)->GetTransport()->GetObjectGuid());
-            *data << float(((Player*)this)->GetTransOffsetX());
-            *data << float(((Player*)this)->GetTransOffsetY());
-            *data << float(((Player*)this)->GetTransOffsetZ());
-            *data << float(((Player*)this)->GetTransOffsetO());
+            *data << ObjectGuid(((Unit*)this)->GetTransport()->GetObjectGuid());
+            *data << float(((Unit*)this)->GetTransOffsetX());
+            *data << float(((Unit*)this)->GetTransOffsetY());
+            *data << float(((Unit*)this)->GetTransOffsetZ());
+            *data << float(((Unit*)this)->GetTransOffsetO());
         }
         else if (GetObjectGuid().GetHigh() == HIGHGUID_TRANSPORT)
         {
@@ -1052,6 +1052,36 @@ bool WorldObject::_IsWithinDist(WorldObject const* obj, float dist2compare, bool
     float maxdist = dist2compare + sizefactor;
 
     return distsq < maxdist * maxdist;
+}
+
+bool WorldObject::_IsWithinDist(WorldObject const* obj, float dist2compare, bool is3D, Unit * unit, Player * plr) const
+{
+	float sizefactor = GetObjectBoundingRadius() + obj->GetObjectBoundingRadius();
+	float maxdist = dist2compare + sizefactor;
+
+	if (unit->GetTransport() && plr->GetTransport() &&  plr->GetTransport()->GetGUIDLow() == unit->GetTransport()->GetGUIDLow())
+	{
+		float dtx = unit->m_movementInfo.GetTransportPos()->x - plr->m_movementInfo.GetTransportPos()->x;
+		float dty = unit->m_movementInfo.GetTransportPos()->y - plr->m_movementInfo.GetTransportPos()->y;
+		float disttsq = dtx * dtx + dty * dty;
+		if (is3D)
+		{
+			float dtz = unit->m_movementInfo.GetTransportPos()->z - plr->m_movementInfo.GetTransportPos()->z;
+			disttsq += dtz * dtz;
+		}
+		return disttsq < (maxdist * maxdist);
+	}
+
+	float dx = GetPositionX() - obj->GetPositionX();
+	float dy = GetPositionY() - obj->GetPositionY();
+	float distsq = dx*dx + dy*dy;
+	if(is3D)
+	{
+		float dz = GetPositionZ() - obj->GetPositionZ();
+		distsq += dz*dz;
+	}
+
+	return distsq < maxdist * maxdist;
 }
 
 bool WorldObject::IsWithinLOSInMap(const WorldObject* obj) const

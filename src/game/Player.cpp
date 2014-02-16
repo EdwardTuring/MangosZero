@@ -548,13 +548,13 @@ Player::~Player()
 
     delete PlayerTalkClass;
 
-    if (m_transport)
-    {
-        m_transport->RemovePassenger(this);
-    }
+	if (GetTransport())
+		GetTransport()->RemovePassenger(this);
+
 
     for (size_t x = 0; x < ItemSetEff.size(); ++x)
-        { delete ItemSetEff[x]; }
+		if (ItemSetEff[x])
+			delete ItemSetEff[x];
 
     // clean up player-instance binds, may unload some instance saves
     for (BoundInstancesMap::iterator itr = m_boundInstances.begin(); itr != m_boundInstances.end(); ++itr)
@@ -1529,10 +1529,10 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     }
 
     // if we were on a transport, leave
-    if (!(options & TELE_TO_NOT_LEAVE_TRANSPORT) && m_transport)
+    if (!(options & TELE_TO_NOT_LEAVE_TRANSPORT) && GetTransport())
     {
-        m_transport->RemovePassenger(this);
-        m_transport = NULL;
+        GetTransport()->RemovePassenger(this);
+       SetTransport(NULL);
         m_movementInfo.ClearTransportData();
     }
 
@@ -1995,7 +1995,7 @@ Creature* Player::GetNPCIfCanInteractWith(ObjectGuid guid, uint32 npcflagmask)
         { return NULL; }
 
     // not too far
-    if (!unit->IsWithinDistInMap(this, INTERACTION_DISTANCE))
+    if(!unit->IsWithinDistInMap(this,INTERACTION_DISTANCE, unit, this))
         { return NULL; }
 
     return unit;
@@ -17586,6 +17586,7 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, T* target, UpdateD
 }
 
 template void Player::UpdateVisibilityOf(WorldObject const* viewPoint, Player*        target, UpdateData& data, std::set<WorldObject*>& visibleNow);
+template void Player::UpdateVisibilityOf(WorldObject const* viewPoint, Unit*        target, UpdateData& data, std::set<WorldObject*>& visibleNow);
 template void Player::UpdateVisibilityOf(WorldObject const* viewPoint, Creature*      target, UpdateData& data, std::set<WorldObject*>& visibleNow);
 template void Player::UpdateVisibilityOf(WorldObject const* viewPoint, Corpse*        target, UpdateData& data, std::set<WorldObject*>& visibleNow);
 template void Player::UpdateVisibilityOf(WorldObject const* viewPoint, GameObject*    target, UpdateData& data, std::set<WorldObject*>& visibleNow);

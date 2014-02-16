@@ -196,6 +196,7 @@ struct CreatureData
     float posY;
     float posZ;
     float orientation;
+	uint32 transMap;
     uint32 spawntimesecs;
     float spawndist;
     uint32 currentwaypoint;
@@ -206,12 +207,6 @@ struct CreatureData
 
     // helper function
     ObjectGuid GetObjectGuid(uint32 lowguid) const { return ObjectGuid(CreatureInfo::GetHighGuid(), id, lowguid); }
-};
-
-enum SplineFlags
-{
-    SPLINEFLAG_WALKMODE     = 0x0000100,
-    SPLINEFLAG_FLYING       = 0x0000200,
 };
 
 // from `creature_addon` and `creature_template_addon`tables
@@ -756,6 +751,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float m_combatStartZ;
 
         Position m_respawnPos;
+
 
     private:
         GridReference<Creature> m_gridRef;

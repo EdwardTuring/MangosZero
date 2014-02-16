@@ -286,6 +286,8 @@ class Pet;
 class PetAura;
 class Totem;
 
+class Transport;
+
 struct SpellImmune
 {
     uint32 type;
@@ -639,11 +641,64 @@ MovementFlags const movementOrTurningFlagsMask = MovementFlags(
             movementFlagsMask | MOVEFLAG_TURN_LEFT | MOVEFLAG_TURN_RIGHT
         );
 
+
+
+enum SplineMode
+{
+	SPLINEMODE_LINEAR       = 0,
+	SPLINEMODE_CATMULLROM   = 1,
+	SPLINEMODE_BEZIER3      = 2
+};
+
+enum SplineType
+{
+	SPLINETYPE_NORMAL       = 0,
+	SPLINETYPE_STOP         = 1,
+	SPLINETYPE_FACINGSPOT   = 2,
+	SPLINETYPE_FACINGTARGET = 3,
+	SPLINETYPE_FACINGANGLE  = 4
+};
+
+enum SplineFlags
+{
+	SPLINEFLAG_NONE         = 0x00000000,
+	SPLINEFLAG_FORWARD      = 0x00000001,
+	SPLINEFLAG_BACKWARD     = 0x00000002,
+	SPLINEFLAG_STRAFE_LEFT  = 0x00000004,
+	SPLINEFLAG_STRAFE_RIGHT = 0x00000008,
+	SPLINEFLAG_LEFT         = 0x00000010,
+	SPLINEFLAG_RIGHT        = 0x00000020,
+	SPLINEFLAG_PITCH_UP     = 0x00000040,
+	SPLINEFLAG_PITCH_DOWN   = 0x00000080,
+	SPLINEFLAG_DONE         = 0x00000100,
+	SPLINEFLAG_FALLING      = 0x00000200,
+	SPLINEFLAG_NO_SPLINE    = 0x00000400,
+	SPLINEFLAG_TRAJECTORY   = 0x00000800,
+	SPLINEFLAG_WALKMODE     = 0x00001000,
+	SPLINEFLAG_FLYING       = 0x00002000,
+	SPLINEFLAG_KNOCKBACK    = 0x00004000,
+	SPLINEFLAG_FINALPOINT   = 0x00008000,
+	SPLINEFLAG_FINALTARGET  = 0x00010000,
+	SPLINEFLAG_FINALFACING  = 0x00020000,
+	SPLINEFLAG_CATMULLROM   = 0x00040000,
+	SPLINEFLAG_CYCLIC       = 0x00080000,
+	SPLINEFLAG_ENTER_CYCLE  = 0x00100000,
+	SPLINEFLAG_ANIMATION    = 0x00200000,
+	SPLINEFLAG_FROZEN       = 0x00400000,
+	SPLINEFLAG_TRANSPORT    = 0x00800000,
+	SPLINEFLAG_TRANSPORT_EXIT = 0x01000000,
+	SPLINEFLAG_UNKNOWN7     = 0x02000000,
+	SPLINEFLAG_UNKNOWN8     = 0x04000000,
+	SPLINEFLAG_ORIENTATION_INVERCED = 0x08000000,
+	SPLINEFLAG_UNKNOWN10    = 0x10000000,
+	SPLINEFLAG_UNKNOWN11    = 0x20000000,
+	SPLINEFLAG_UNKNOWN12    = 0x40000000
+};
 class MovementInfo
 {
     public:
         MovementInfo() : moveFlags(MOVEFLAG_MOVE_STOP), time(0),
-            t_time(0), s_pitch(0.0f), fallTime(0), u_unk1(0.0f) {}
+            t_time(0), t_seat(-1),s_pitch(0.0f), fallTime(0), u_unk1(0.0f) {}
 
         // Read/Write methods
         void Read(ByteBuffer& data);
@@ -679,6 +734,9 @@ class MovementInfo
         ObjectGuid const& GetTransportGuid() const { return t_guid; }
         Position const* GetTransportPos() const { return &t_pos; }
         uint32 GetTime() const { return time; }
+		 int8 GetTransportSeat() const { return t_seat; }
+
+
         uint32 GetTransportTime() const { return t_time; }
         uint32 GetFallTime() const { return fallTime; }
         void ChangeOrientation(float o) { pos.o = o; }
@@ -701,6 +759,7 @@ class MovementInfo
         ObjectGuid t_guid;
         Position t_pos;
         uint32   t_time;
+		int8 t_seat;
         // swimming and unknown
         float    s_pitch;
         // last fall time
@@ -3011,6 +3070,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
             return this;
         }
+
+		int8 GetTransSeat() const { return m_movementInfo.GetTransportSeat(); }
+		uint64 GetTransGUID() const;
         bool IsCharmerOrOwnerPlayerOrPlayerItself() const;
         Player* GetCharmerOrOwnerPlayerOrPlayerItself();
         Player const* GetCharmerOrOwnerPlayerOrPlayerItself() const;
@@ -3178,6 +3240,18 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         TrackedAuraTargetMap&       GetTrackedAuraTargets(TrackedAuraType type)       { return m_trackedAuraTargets[type]; }
         TrackedAuraTargetMap const& GetTrackedAuraTargets(TrackedAuraType type) const { return m_trackedAuraTargets[type]; }
         SpellImmuneList m_spellImmune[MAX_SPELL_IMMUNITY];
+
+		// Transports
+		Transport* GetTransport() const { return m_transport; }
+		void SetTransport(Transport* t) { m_transport = t; }
+		float GetTransOffsetX() const { return m_movementInfo.GetTransportPos()->x; }
+		float GetTransOffsetY() const { return m_movementInfo.GetTransportPos()->y; }
+		float GetTransOffsetZ() const { return m_movementInfo.GetTransportPos()->z; }
+		float GetTransOffsetO() const { return m_movementInfo.GetTransportPos()->o; }
+		uint32 GetTransTime() const { return m_movementInfo.GetTransportTime(); }
+
+
+
 
         // Threat related methods
         bool CanHaveThreatList(bool ignoreAliveState = false) const;
@@ -3359,6 +3433,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void SendPetAIReaction();
         ///----------End of Pet responses methods----------
 
+
         void PropagateSpeedChange() { GetMotionMaster()->PropagateSpeedChange(); }
 
         // reactive attacks
@@ -3378,6 +3453,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         // Movement info
         MovementInfo m_movementInfo;
         Movement::MoveSpline* movespline;
+
+		// Transports
+		Transport* m_transport;
 
         void ScheduleAINotify(uint32 delay);
         bool IsAINotifyScheduled() const { return m_AINotifyScheduled;}

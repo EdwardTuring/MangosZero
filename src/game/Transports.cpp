@@ -443,23 +443,26 @@ void Transport::TeleportTransport(uint32 newMapid, float x, float y, float z)
     Map const* oldMap = GetMap();
     Relocate(x, y, z);
 
-    for (PlayerSet::iterator itr = m_passengers.begin(); itr != m_passengers.end();)
+    for (UnitSet::iterator itr = m_passengers.begin(); itr != m_passengers.end();)
     {
-        PlayerSet::iterator it2 = itr;
+        UnitSet::iterator it2 = itr;
         ++itr;
 
-        Player* plr = *it2;
-        if (!plr)
-        {
-            m_passengers.erase(it2);
-            continue;
-        }
+        Unit* plr = *it2;
+		if(plr->GetTypeId() == TYPEID_PLAYER)
+		{
+			if (!plr)
+			{
+				m_passengers.erase(it2);
+				continue;
+			}
 
-        if (plr->IsDead() && !plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
-        {
-            plr->ResurrectPlayer(1.0);
-        }
-        plr->TeleportTo(newMapid, x, y, z, GetOrientation(), TELE_TO_NOT_LEAVE_TRANSPORT);
+			if (plr->IsDead() &&  !plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
+			{
+				((Player*)plr)->ResurrectPlayer(1.0);
+			}
+			((Player*)plr)->TeleportTo(newMapid, x, y, z, GetOrientation(), TELE_TO_NOT_LEAVE_TRANSPORT);
+		}
 
         // WorldPacket data(SMSG_811, 4);
         // data << uint32(0);
@@ -479,20 +482,36 @@ void Transport::TeleportTransport(uint32 newMapid, float x, float y, float z)
     }
 }
 
-bool Transport::AddPassenger(Player* passenger)
+bool Transport::AddPassenger(Unit* passenger)
 {
     if (m_passengers.find(passenger) == m_passengers.end())
     {
-        DETAIL_LOG("Player %s boarded transport %s.", passenger->GetName(), GetName());
+		if(passenger->GetTypeId() == TYPEID_PLAYER)
+		{
+			DETAIL_LOG("Player %s boarded transport %s.", passenger->GetName(), GetName());
+		}
+		else if (passenger->GetTypeId() == TYPEID_UNIT)
+		{
+			DETAIL_LOG("Creature %s boarded transport %s.", passenger->GetName(), GetName());
+		}
         m_passengers.insert(passenger);
     }
     return true;
 }
 
-bool Transport::RemovePassenger(Player* passenger)
+bool Transport::RemovePassenger(Unit* passenger)
 {
     if (m_passengers.erase(passenger))
-        { DETAIL_LOG("Player %s removed from transport %s.", passenger->GetName(), GetName()); }
+	{
+		if(passenger->GetTypeId() == TYPEID_PLAYER)
+		{
+			DETAIL_LOG("Player %s boarded transport %s.", passenger->GetName(), GetName());
+		}
+		else if (passenger->GetTypeId() == TYPEID_UNIT)
+		{
+			DETAIL_LOG("Creature %s boarded transport %s.", passenger->GetName(), GetName());
+		}
+	}
     return true;
 }
 
@@ -517,9 +536,9 @@ void Transport::Update(uint32 update_diff, uint32 /*p_time*/)
         }
 
         /*
-        for(PlayerSet::const_iterator itr = m_passengers.begin(); itr != m_passengers.end();)
+        for(UnitSet::const_iterator itr = m_passengers.begin(); itr != m_passengers.end();)
         {
-            PlayerSet::const_iterator it2 = itr;
+            UnitSet::const_iterator it2 = itr;
             ++itr;
             //(*it2)->SetPosition( m_curr->second.x + (*it2)->GetTransOffsetX(), m_curr->second.y + (*it2)->GetTransOffsetY(), m_curr->second.z + (*it2)->GetTransOffsetZ(), (*it2)->GetTransOffsetO() );
         }
@@ -565,4 +584,20 @@ void Transport::UpdateForMap(Map const* targetMap)
             if (this != itr->getSource()->GetTransport())
                 { itr->getSource()->SendDirectMessage(&out_packet); }
     }
+}
+
+void Transport::BuildCreateUpdateBlockForPlayer( UpdateData *data, Player *target ) const 
+{
+
+	if(target->GetPet()) 
+	{
+		float x, y, z, o;
+		x = GetPositionX() +target->GetTransOffsetX();
+		y = GetPositionY() +target->GetTransOffsetY();
+		z = GetPositionY() + target->GetTransOffsetZ();
+		o = GetOrientation() + target->GetTransOffsetO();
+		target->GetPet()->Relocate(x, y, z);
+		target->GetPet()->BuildCreateUpdateBlockForPlayer(data, target);
+	}
+	Object::BuildCreateUpdateBlockForPlayer(data, target);
 }

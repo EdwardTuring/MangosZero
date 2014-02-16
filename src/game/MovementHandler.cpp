@@ -615,9 +615,10 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 
     Unit* mover = _player->GetMover();
 
-    if (Player* plMover = mover->GetTypeId() == TYPEID_PLAYER ? (Player*)mover : NULL)
-    {
-        if (movementInfo.HasMovementFlag(MOVEFLAG_TAXI))
+	if (Player* plMover = mover->GetTypeId() == TYPEID_PLAYER ? (Player*)mover : NULL)
+	{
+		Pet *pet = plMover->GetPet();
+		if (movementInfo.HasMovementFlag(MOVEFLAG_TAXI))
         {
             if (!plMover->m_transport)
             {
@@ -628,6 +629,9 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
                     {
                         plMover->m_transport = (*iter);
                         (*iter)->AddPassenger(plMover);
+						//for pet 
+						plMover->UnsummonPetTemporaryIfAny();
+
                         break;
                     }
                 }
@@ -637,6 +641,9 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
         {
             plMover->m_transport->RemovePassenger(plMover);
             plMover->m_transport = NULL;
+			
+			plMover->ResummonPetTemporaryUnSummonedIfAny();
+
             movementInfo.ClearTransportData();
         }
 
@@ -648,8 +655,8 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 
         plMover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
         plMover->m_movementInfo = movementInfo;
-
-        /* Movement should cancel looting */
+	
+		/* Movement should cancel looting */
         if (ObjectGuid lootGUID = plMover->GetLootGuid())
         {
             plMover->SendLootRelease(lootGUID);

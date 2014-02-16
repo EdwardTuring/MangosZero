@@ -56,6 +56,8 @@
 #include "movement/MoveSplineInit.h"
 #include "CreatureLinkingMgr.h"
 
+#include "Transports.h"
+#include "Unit.h"
 // apply implementation of the singletons
 #include "Policies/Singleton.h"
 
@@ -171,6 +173,9 @@ Creature::~Creature()
     CleanupsBeforeDelete();
 
     m_vendorItemCounts.clear();
+
+	if (GetTransport())
+		GetTransport()->RemovePassenger(this);
 
     delete i_AI;
     i_AI = NULL;
@@ -1021,6 +1026,9 @@ void Creature::SaveToDB(uint32 mapid)
 
     uint32 displayId = GetNativeDisplayId();
 
+	uint32 transportMap = 0;
+	bool IsTransport = false;
+
     // check if it's a custom model and if not, use 0 for displayId
     CreatureInfo const* cinfo = GetCreatureInfo();
     if (cinfo)
@@ -1037,15 +1045,26 @@ void Creature::SaveToDB(uint32 mapid)
             { displayId = 0; }
     }
 
+	if (GetTransport())
+	{
+		IsTransport = true;
+		uint32 MapId = GetTransport()->GetGOInfo()->moTransport.mapID;
+		if (MapId)
+			transportMap = MapId;
+	}
+
     // data->guid = guid don't must be update at save
     data.id = GetEntry();
     data.mapid = mapid;
     data.modelid_override = displayId;
     data.equipmentId = GetEquipmentId();
-    data.posX = GetPositionX();
-    data.posY = GetPositionY();
-    data.posZ = GetPositionZ();
-    data.orientation = GetOrientation();
+	data.posX = IsTransport ? GetTransOffsetX() : GetPositionX();
+	data.posY = IsTransport ? GetTransOffsetY() : GetPositionY();
+	data.posZ = IsTransport ? GetTransOffsetZ() : GetPositionZ();
+	data.orientation = IsTransport ? GetTransOffsetO() : GetOrientation();
+
+	data.transMap = transportMap;
+
     data.spawntimesecs = m_respawnDelay;
     // prevent add data integrity problems
     data.spawndist = GetDefaultMovementType() == IDLE_MOTION_TYPE ? 0 : m_respawnradius;
@@ -1073,6 +1092,7 @@ void Creature::SaveToDB(uint32 mapid)
        << data.posY << ","
        << data.posZ << ","
        << data.orientation << ","
+	    << transportMap << ","
        << data.spawntimesecs << ","                        // respawn time
        << (float) data.spawndist << ","                    // spawn distance (float)
        << data.currentwaypoint << ","                      // currentwaypoint

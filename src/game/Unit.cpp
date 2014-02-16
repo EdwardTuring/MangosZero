@@ -45,6 +45,7 @@
 #include "Pet.h"
 #include "Util.h"
 #include "Totem.h"
+#include "Transports.h"
 #include "BattleGround/BattleGround.h"
 #include "InstanceData.h"
 #include "OutdoorPvP/OutdoorPvP.h"
@@ -191,6 +192,7 @@ void GlobalCooldownMgr::CancelGlobalCooldown(SpellEntry const* spellInfo)
 Unit::Unit() :
     movespline(new Movement::MoveSpline()),
     m_charmInfo(NULL),
+	m_transport(NULL),
     i_motionMaster(this),
     m_ThreatManager(this),
     m_HostileRefManager(this)
@@ -9174,4 +9176,11 @@ void Unit::DisableSpline()
 {
     m_movementInfo.RemoveMovementFlag(MovementFlags(MOVEFLAG_IMMOBILIZED | MOVEFLAG_MOVE_FORWARD));
     movespline->_Interrupt();
+}
+
+uint64 Unit::GetTransGUID() const
+{
+	if (GetTransport())
+		return GetTransport()->GetGUID();
+	return 0;
 }
