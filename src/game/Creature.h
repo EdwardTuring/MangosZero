@@ -698,6 +698,12 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         void SetVirtualItem(VirtualItemSlot slot, uint32 item_id);
         void SetVirtualItemRaw(VirtualItemSlot slot, uint32 display_id, uint32 info0, uint32 info1);
+
+		void SetTransportHomePosition(float x, float y, float z, float o) { m_transportHomePosition.x = x; m_transportHomePosition.x = y;m_transportHomePosition.z = z;m_transportHomePosition.o = o;}
+		void SetTransportHomePosition(const Position &pos) { m_transportHomePosition = pos; }
+		void GetTransportHomePosition(float &x, float &y, float &z, float &ori) { x = m_transportHomePosition.x;y = m_transportHomePosition.y; z = m_transportHomePosition.z;ori = m_transportHomePosition.o; }
+		Position GetTransportHomePosition() { return m_transportHomePosition; }
+
     protected:
         bool MeetsSelectAttackingRequirement(Unit* pTarget, SpellEntry const* pSpellInfo, uint32 selectFlags) const;
 
@@ -752,7 +758,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         Position m_respawnPos;
 
-
+		Position m_transportHomePosition;
     private:
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;

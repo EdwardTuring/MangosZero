@@ -589,15 +589,37 @@ void Transport::UpdateForMap(Map const* targetMap)
 void Transport::BuildCreateUpdateBlockForPlayer( UpdateData *data, Player *target ) const 
 {
 
-	if(target->GetPet()) 
-	{
-		float x, y, z, o;
-		x = GetPositionX() +target->GetTransOffsetX();
-		y = GetPositionY() +target->GetTransOffsetY();
-		z = GetPositionY() + target->GetTransOffsetZ();
-		o = GetOrientation() + target->GetTransOffsetO();
-		target->GetPet()->Relocate(x, y, z);
-		target->GetPet()->BuildCreateUpdateBlockForPlayer(data, target);
-	}
 	Object::BuildCreateUpdateBlockForPlayer(data, target);
+}
+
+bool Transport::AddPetPassenger(Creature* passenger)
+{
+	// Add pets to transport
+	if (!passenger->IsPet())
+		return false;
+
+	// Already on this transport?
+	if (passenger->GetTransGUID() == this->GetGUID())
+		return true;
+
+	passenger->SetTransport(this);
+	passenger->m_movementInfo.SetMovementFlags(MOVEFLAG_TAXI);
+	passenger->m_movementInfo.t_guid = GetGUID();
+	m_petPassengerSet.insert(passenger);
+
+	return true;
+}
+bool Transport::RemovePetPassenger(Creature* passenger)
+{
+	if (!passenger->IsPet())
+		return false;
+
+	if (m_petPassengerSet.erase(passenger))
+		DETAIL_LOG("Pet %s  , %s.", passenger->GetName(), GetName());
+
+	passenger->SetTransport(NULL);
+	passenger->m_movementInfo.RemoveMovementFlag(MOVEFLAG_TAXI);
+	passenger->m_movementInfo.ClearTransportData();
+
+	return true;
 }

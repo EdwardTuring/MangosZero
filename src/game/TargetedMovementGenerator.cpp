@@ -27,6 +27,7 @@
 #include "Errors.h"
 #include "PathFinder.h"
 #include "Unit.h"
+#include "Transports.h"
 #include "Creature.h"
 #include "Player.h"
 #include "World.h"
@@ -81,12 +82,20 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T& owner, bool up
     if (!i_path)
         { i_path = new PathFinder(&owner); }
 
+
+	if (i_target->GetTransGUID())
+	{
+		// GetClosePoint() returns wrong Z position when on transports
+		z = i_target->GetPositionZ();
+	}
+
     // allow pets following their master to cheat while generating paths
     bool forceDest = (owner.GetTypeId() == TYPEID_UNIT && ((Creature*)&owner)->IsPet()
                       && owner.hasUnitState(UNIT_STAT_FOLLOW));
     i_path->calculate(x, y, z, forceDest);
     if (i_path->getPathType() & PATHFIND_NOPATH)
         { return; }
+
 
     D::_addUnitStateMove(owner);
     i_targetReached = false;
@@ -143,9 +152,35 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T& owner, const uint32& time_
         targetMoved = RequiresNewPosition(owner, dest.x, dest.y, dest.z);
     }
 
+	// Handle transport enter / leave for pets
+	if (owner.IsPet())
+	{
+		bool target_transport = i_target->m_movementInfo.moveFlags & MOVEFLAG_TAXI;
+		bool my_transport = owner.m_movementInfo.moveFlags & MOVEFLAG_TAXI;
+		if (target_transport && !my_transport)
+		{
+			Transport* trans = i_target->GetTransport();
+
+			// Target is on a transport, we need to add ourselves when we enter
+			// Approximate size of transport is 25 (from dock to water)
+			//if (owner.IsWithinDist(trans, 50))
+				trans->AddPetPassenger((Creature*)&owner);
+		}
+		else if (!target_transport && my_transport)
+		{
+			Transport* trans = owner.GetTransport();
+
+			// Target is off transport, we need to remove ourselves when we leave
+			// Approximate size of transport is 25 (from dock to water)
+	//		if (!owner.IsWithinDist(trans, 50))
+				trans->RemovePetPassenger((Creature*)&owner);
+		}
+	}
+
     if (m_speedChanged || targetMoved)
         { _setTargetLocation(owner, targetMoved); }
 
+	
     if (owner.movespline->Finalized())
     {
         if (i_angle == 0.f && !owner.HasInArc(0.01f, i_target.getTarget()))

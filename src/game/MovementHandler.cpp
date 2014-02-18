@@ -617,7 +617,7 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 
 	if (Player* plMover = mover->GetTypeId() == TYPEID_PLAYER ? (Player*)mover : NULL)
 	{
-		Pet *pet = plMover->GetPet();
+		//Pet *pet = plMover->GetPet();
 		if (movementInfo.HasMovementFlag(MOVEFLAG_TAXI))
         {
             if (!plMover->m_transport)
@@ -630,7 +630,7 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
                         plMover->m_transport = (*iter);
                         (*iter)->AddPassenger(plMover);
 						//for pet 
-						plMover->UnsummonPetTemporaryIfAny();
+						//plMover->UnsummonPetTemporaryIfAny();
 
                         break;
                     }
@@ -642,7 +642,7 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
             plMover->m_transport->RemovePassenger(plMover);
             plMover->m_transport = NULL;
 			
-			plMover->ResummonPetTemporaryUnSummonedIfAny();
+		//	plMover->ResummonPetTemporaryUnSummonedIfAny();
 
             movementInfo.ClearTransportData();
         }

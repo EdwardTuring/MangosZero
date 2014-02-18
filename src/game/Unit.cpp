@@ -193,6 +193,7 @@ Unit::Unit() :
     movespline(new Movement::MoveSpline()),
     m_charmInfo(NULL),
 	m_transport(NULL),
+	m_unitTypeMask(UNIT_MASK_NONE),
     i_motionMaster(this),
     m_ThreatManager(this),
     m_HostileRefManager(this)

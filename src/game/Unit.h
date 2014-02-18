@@ -589,7 +589,8 @@ enum MovementFlags
     MOVEFLAG_PITCH_DOWN             = 0x00000080,           /// not confirmed
 
     // Byte 2 (Resets on Situation Change)
-    MOVEFLAG_WALK_MODE              = 0x00000100,           /// verified
+	MOVEFLAG_WALK_MODE              = 0x00000100,           /// verified
+    MOVEFLAG_TRANSPORT              = 0x00000200,         
     MOVEFLAG_TAXI                   = 0x02000000,           /// verified
 
     MOVEFLAG_NO_COLLISION           = 0x00000400,           /// not confirmed
@@ -642,6 +643,20 @@ MovementFlags const movementOrTurningFlagsMask = MovementFlags(
         );
 
 
+enum UnitTypeMask
+{
+	UNIT_MASK_NONE                  = 0x00000000,
+	UNIT_MASK_SUMMON                = 0x00000001,
+	UNIT_MASK_MINION                = 0x00000002,
+	UNIT_MASK_GUARDIAN              = 0x00000004,
+	UNIT_MASK_TOTEM                 = 0x00000008,
+	UNIT_MASK_PET                   = 0x00000010,
+	UNIT_MASK_VEHICLE               = 0x00000020,
+	UNIT_MASK_PUPPET                = 0x00000040,
+	UNIT_MASK_HUNTER_PET            = 0x00000080,
+	UNIT_MASK_CONTROLABLE_GUARDIAN  = 0x00000100,
+	UNIT_MASK_ACCESSORY             = 0x00000200
+};
 
 enum SplineMode
 {
@@ -750,27 +765,32 @@ class MovementInfo
         };
 
         JumpInfo const& GetJumpInfo() const { return jump; }
-    private:
-        // common
-        uint32   moveFlags;                                 // see enum MovementFlags
-        uint32   time;
-        Position pos;
-        // transport
-        ObjectGuid t_guid;
-        Position t_pos;
-        uint32   t_time;
+
+		// transport
+		ObjectGuid t_guid;
+		Position t_pos;
+		uint32   t_time;
 		int8 t_seat;
-        // swimming and unknown
-        float    s_pitch;
-        // last fall time
-        uint32   fallTime;
-        // jumping
-        JumpInfo jump;
-        // spline
-        float    u_unk1;
-        // unknown
-        uint8 unk13;
-        uint32 unklast; // something to do with collision?
+
+		// common
+		uint32   moveFlags;                                 // see enum MovementFlags
+		uint32   time;
+		Position pos;
+
+		// swimming and unknown
+		float    s_pitch;
+		// last fall time
+		uint32   fallTime;
+		// jumping
+		JumpInfo jump;
+		// spline
+		float    u_unk1;
+		// unknown
+		uint8 unk13;
+		uint32 unklast; // something to do with collision?
+
+    private:
+      
 };
 
 inline ByteBuffer& operator<< (ByteBuffer& buf, MovementInfo const& mi)
@@ -3090,6 +3110,17 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         CharmInfo* GetCharmInfo() { return m_charmInfo; }
         CharmInfo* InitCharmInfo(Unit* charm);
 
+
+		uint32 HasUnitTypeMask(uint32 mask) const { return mask & m_unitTypeMask; }
+		void AddUnitTypeMask(uint32 mask) { m_unitTypeMask |= mask; }
+		bool IsSummon() const   { return m_unitTypeMask & UNIT_MASK_SUMMON; }
+		bool IsGuardian() const { return m_unitTypeMask & UNIT_MASK_GUARDIAN; }
+		bool IsPet() const      { return m_unitTypeMask & UNIT_MASK_PET; }
+		bool IsHunterPet() const{ return m_unitTypeMask & UNIT_MASK_HUNTER_PET; }
+		bool IsTotem() const    { return m_unitTypeMask & UNIT_MASK_TOTEM; }
+		bool IsVehicle() const  { return m_unitTypeMask & UNIT_MASK_VEHICLE; }
+
+
         ObjectGuid const& GetTotemGuid(TotemSlot slot) const { return m_TotemSlot[slot]; }
         Totem* GetTotem(TotemSlot slot) const;
         bool IsAllTotemSlotsUsed() const;
@@ -3514,6 +3545,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_reactiveTimer[MAX_REACTIVE];
         uint32 m_regenTimer;
         uint32 m_lastManaUseTimer;
+
+		uint32 m_unitTypeMask;
 
         void DisableSpline();
         bool m_isCreatureLinkingTrigger;

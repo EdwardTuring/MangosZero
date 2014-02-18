@@ -1283,20 +1283,35 @@ void WorldObject::GetRandomPoint(float x, float y, float z, float distance, floa
 
 void WorldObject::UpdateGroundPositionZ(float x, float y, float& z) const
 {
-    float new_z = GetMap()->GetHeight(x, y, z);
+   
+	if(GetTypeId() == TYPEID_UNIT)
+	{
+		if (((Unit*)this)->GetTransport())
+		{
+			return;
+		}
+	}
+	
+	float new_z = GetMap()->GetHeight(x, y, z);
     if (new_z > INVALID_HEIGHT)
         { z = new_z + 0.05f; }                                  // just to be sure that we are not a few pixel under the surface
+
 }
 
 void WorldObject::UpdateAllowedPositionZ(float x, float y, float& z) const
 {
-    switch (GetTypeId())
+	switch (GetTypeId())
     {
         case TYPEID_UNIT:
         {
-            // non fly unit don't must be in air
+
+			
+			if (((Unit*)this)->GetTransGUID())
+				return;
+			
+			// non fly unit don't must be in air
             // non swim unit must be at ground (mostly speedup, because it don't must be in water and water level check less fast
-            if (!((Creature const*)this)->CanFly())
+            if (!((Creature const*)this)->CanFly()) //for transport
             {
                 bool canSwim = ((Creature const*)this)->CanSwim();
                 float ground_z = z;

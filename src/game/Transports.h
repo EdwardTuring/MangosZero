@@ -42,10 +42,18 @@ class Transport : public GameObject
         bool AddPassenger(Unit* passenger);
         bool RemovePassenger(Unit* passenger);
 
-        typedef std::set<Unit*> UnitSet;
-        UnitSet const& GetPassengers() const { return m_passengers; }
+		typedef std::set<Unit*> UnitSet;
+        typedef std::set<Creature*> CreatureSet;
+ 
+		UnitSet const& GetPassengers() const { return m_passengers; }
 
 		void BuildCreateUpdateBlockForPlayer(UpdateData *data, Player *target) const override;
+
+		// for pet:
+
+		bool AddPetPassenger(Creature* passenger);
+		bool RemovePetPassenger(Creature* passenger);
+		CreatureSet const& GetPetPassengers() const { return m_petPassengerSet; }
 
     private:
         struct WayPoint
@@ -68,6 +76,8 @@ class Transport : public GameObject
         uint32 m_timer;
 
        UnitSet m_passengers;
+
+	   CreatureSet m_petPassengerSet;
 
     public:
         WayPointMap m_WayPoints;

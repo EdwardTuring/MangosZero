@@ -64,7 +64,15 @@ Pet::Pet(PetType type) :
 {
     m_name = "Pet";
     m_regenTimer = 4000;
+	
+	m_unitTypeMask |= UNIT_MASK_PET;
+	if (type == HUNTER_PET)
+		m_unitTypeMask |= UNIT_MASK_HUNTER_PET;
 
+	if (!(m_unitTypeMask & UNIT_MASK_CONTROLABLE_GUARDIAN))
+	{
+		m_unitTypeMask |= UNIT_MASK_CONTROLABLE_GUARDIAN;
+	}
     // pets always have a charminfo, even if they are not actually charmed
     CharmInfo* charmInfo = InitCharmInfo(this);
 
